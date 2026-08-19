@@ -1,0 +1,152 @@
+#include "Dispatcher.h"
+#include <sys/select.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/time.h> 
+#include <sys/types.h> 
+#include <unistd.h> 
+
+#define Max 1024  // select实例中集合存放元素的最大个数
+struct SelectData
+{
+	fd_set readSet;
+	fd_set writeSet;
+};
+
+static void* selectInit();
+static int selectAdd(struct Channel* channel, struct EventLoop* evLoop);
+static int selectRemove(struct Channel* channel, struct EventLoop* evLoop);
+static int selectModify(struct Channel* channel, struct EventLoop* evLoop);
+static int selectDispatch(struct EventLoop* evLoop, int timeout);  // timeout单位: s
+static int selectClear(struct EventLoop* evLoop);
+
+static void setFdSet(struct Channel* channel, struct SelectData* data);    // 设置文件描述符的集合
+static void clearFdSet(struct Channel* channel, struct SelectData* data);  // 清空文件描述符的集合
+
+struct Dispatcher SelectDispatcher = {
+	selectInit,
+	selectAdd,
+	selectRemove,
+	selectModify,
+	selectDispatch,
+	selectClear
+};
+
+static void* selectInit()
+{
+	struct SelectData* data = (struct SelectData*)malloc(sizeof(struct SelectData));
+	FD_ZERO(&data->readSet);
+	FD_ZERO(&data->writeSet);
+
+	return data;
+}
+
+static void setFdSet(struct Channel* channel, struct SelectData* data)
+{
+	if (channel->events & ReadEvent)
+	{
+		FD_SET(channel->fd, &data->readSet);
+	}
+	if (channel->events & WriteEvent)
+	{
+		FD_SET(channel->fd, &data->writeSet);
+	}
+}
+
+static void clearFdSet(struct Channel* channel, struct SelectData* data)
+{
+	if (channel->events & ReadEvent)
+	{
+		FD_CLR(channel->fd, &data->readSet);
+	}
+	if (channel->events & WriteEvent)
+	{
+		FD_CLR(channel->fd, &data->writeSet);
+	}
+}
+
+static int selectAdd(struct Channel* channel, struct EventLoop* evLoop)
+{
+	if (channel->fd >= Max)
+	{
+		return -1;
+	}
+
+	struct SelectData* data = (struct selectData*)evLoop->dispatcherData;
+	setFdSet(channel, data);
+
+	return 0;
+}
+
+static int selectRemove(struct Channel* channel, struct EventLoop* evLoop)
+{
+	if (channel->fd >= Max)
+	{
+		return -1;
+	}
+
+	struct SelectData* data = (struct SelectData*)evLoop->dispatcherData;
+	clearFdSet(channel, data);
+
+	return 0;
+}
+
+static int selectModify(struct Channel* channel, struct EventLoop* evLoop)
+{
+	if (channel->fd >= Max)
+	{
+		return -1;
+	}
+
+	struct SelectData* data = (struct SelectData*)evLoop->dispatcherData;
+	
+	//先清空后设置，这里不同于clearSet函数的有选择性清空
+	FD_CLR(channel->fd, &data->readSet);
+	FD_CLR(channel->fd, &data->writeSet);
+	setFdSet(channel, data);
+
+	return 0;
+}
+
+static int selectDispatch(struct EventLoop* evLoop, int timeout)  // timeout单位: s
+{
+	struct SelectData* data = (struct SelectData*)evLoop->dispatcherData;
+
+	struct timeval val;
+	val.tv_sec = timeout;
+	val.tv_usec = 0;
+
+	fd_set readTemp = data->readSet;
+	fd_set writeTemp = data->writeSet;
+
+	int count = select(Max, &readTemp, &writeTemp, NULL, &val);
+	if (count == -1)
+	{
+		perror("select");
+		exit(0);
+	}
+
+	for (int i = 0; i < Max; ++i)
+	{
+		if (FD_ISSET(i, &readTemp))
+		{
+			eventActivate(evLoop, i, ReadEvent);
+		}
+		if (FD_ISSET(i, &writeTemp))
+		{
+			eventActivate(evLoop, i, WriteEvent);
+		}
+	}
+
+	return 0;
+}
+
+static int selectClear(struct EventLoop* evLoop)
+{
+	struct PollData* data = (struct PollData*)evLoop->dispatcherData;
+	free(data);
+
+	return 0;
+}
+
+
