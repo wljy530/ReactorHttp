@@ -14,3 +14,8 @@ struct WorkerThread
 
 // 初始化(参数index主要用于起线程名字)
 int workerThreadInit(struct WorkerThread* thread, int index);
+
+// 子线程的回调函数
+void* subThreadRunning(void* arg);
+// 启动线程
+void workerThreadRun(struct WorkerThread* thread);
