@@ -120,8 +120,8 @@ static int epollDispatch(struct EventLoop* evLoop, int timeout)  // timeout单位:
 
 	for (int i = 0; i < count; ++i)
 	{
-		int fd = data->events->data.fd;
-		int events = data->events->events;
+		int fd = data->events[i].data.fd;
+		int events = data->events[i].events;
 
 		if (events & EPOLLERR || events & EPOLLHUP)  // 事件出现异常
 		{

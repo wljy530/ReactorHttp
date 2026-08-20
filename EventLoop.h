@@ -63,7 +63,7 @@ int eventLoopRun(struct EventLoop* evLoop);
 int eventActivate(struct EventLoop* evLoop, int fd, int event);
 
 // 添加任务到任务队列
-int eventLoopAddTask(struct EventLoop* evLoop, struct Channel* channel, int type);
+int eventLoopAddTask(struct EventLoop* evLoop, struct Channel* channel, enum ElemType type);
 
 // 处理任务队列中的任务
 int eventLoopProcessTask(struct EventLoop* evLoop);

@@ -111,7 +111,7 @@ int eventActivate(struct EventLoop* evLoop, int fd, int event)
 	return 0;
 }
 
-int eventLoopAddTask(struct EventLoop* evLoop, struct Channel* channel, int type)
+int eventLoopAddTask(struct EventLoop* evLoop, struct Channel* channel, enum ElemType type)
 {
 	// 加锁，保护共享资源
 	pthread_mutex_lock(&evLoop->mutex);
@@ -134,7 +134,7 @@ int eventLoopAddTask(struct EventLoop* evLoop, struct Channel* channel, int type
 
 	pthread_mutex_unlock(&evLoop->mutex);
 
-	// 处理节点
+	// 处理节点(基于子线程的角度分析)
 	/*
 	* 细节:
 	*	1. 对于链表节点的添加：可能是当前线程也可能是其他线程(主线程)，因此需要加互斥锁
@@ -144,7 +144,8 @@ int eventLoopAddTask(struct EventLoop* evLoop, struct Channel* channel, int type
 	*/
 	if (evLoop->threadID == pthrread_self())  // 当前线程为子线程
 	{
-		eventLoopProcessTask(evLoop);
+		// 注意其他注释的分析全是从子线程角度分析，如果是主线程调用该函数就是走这个分支，处理任务队列中连接客户端的任务
+		eventLoopProcessTask(evLoop);  
 	}
 	else  
 	{

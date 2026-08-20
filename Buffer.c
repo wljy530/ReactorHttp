@@ -1,3 +1,4 @@
+#define _GNU_SOURCE 
 #include "Buffer.h"
 #include <stdlib.h>
 #include <string.h>
@@ -124,6 +125,15 @@ int bufferSocketRead(struct Buffer* buffer, int fd)
 
 	free(tmpbuf);
 	return result;
+}
+
+char* bufferFindCRLF(struct Buffer* buffer)
+{
+	// strstr --> 大字符串中匹配子字符串(遇到\0结束)
+	// memmem --> 大数据块中匹配子数据块(根据指定数据块大小查找)
+	char* ptr = memmem(buffer->data + buffer->readPos, bufferReadableSize(buffer), "\r\n", 2);
+
+	return ptr;
 }
 
 void bufferDestroy(struct Buffer* buffer)

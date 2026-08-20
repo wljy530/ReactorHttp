@@ -12,7 +12,6 @@ int workerThreadInit(struct WorkerThread* thread, int index)
 	return 0;
 }
 
-
 void* subThreadRunning(void* arg)  
 {
 	struct WorkerThread* thread = (struct WorkerThread*)arg;

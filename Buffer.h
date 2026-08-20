@@ -28,5 +28,8 @@ int bufferAppendString(struct Buffer* buffer, const char* data);
 // 2. 接收套接字数据
 int bufferSocketRead(struct Buffer* buffer, int fd);
 
+// 根据\r\n取出一行(作用于解析协议的时候)，找到其在数据块中的位置，返回该位置
+char* bufferFindCRLF(struct Buffer* buffer);
+
 // 销毁内存
 void bufferDestroy(struct Buffer* buffer);
