@@ -52,6 +52,25 @@ char* httpRequestGetHeader(struct HttpRequest* request, const char* key);
 
 // 解析请求行
 bool parseHttpRequestLine(struct HttpRequest* request, struct Buffer* readBuf);
-
 // 解析请求头(该函数处理请求头中的一行)
 bool parseHttpRequestHeader(struct HttpRequest* request, struct Buffer* readBuf);
+// 解析http请求协议
+bool parseHttpRequest(struct HttpRequest* request, struct Buffer* readBuf,
+	struct HttpResponse* response, struct Buffer* sendBuf, int socket);
+
+// 解码字符串
+// 因为URL编码规则，非ASCII字符(中文、符号)会转成%加上该字节的两位十六进制，
+// UTF?8中文一个汉字占3字节，所以一个中文会变成%XX%XX%XX。
+int hexToDec(char c);  // 16进制转10进制
+void decodeMsg(char* to, char* from);  // to 存储解码之后的数据，传出参数；from 被解码的数据，传入参数
+
+// 根据文件后缀得到对应的Content-Type
+const char* getFileType(const char* name);
+
+// 发送目录给客户端
+int sendDir(const char* dirName, int cfd);
+// 发送文件给客户端
+int sendFile(const char* fileName, int cfd);
+
+// 处理http请求协议(基于get的http请求)
+bool processHttpRequest(struct HttpRequest* request, struct HttpResponse* response);

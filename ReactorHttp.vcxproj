@@ -81,6 +81,7 @@
     <ClCompile Include="EpollDispatcher.c" />
     <ClCompile Include="EventLoop.c" />
     <ClCompile Include="HttpRequest.c" />
+    <ClCompile Include="HttpResponse.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="PollDispatcher.c" />
     <ClCompile Include="SelectDispatcher.c" />
@@ -96,6 +97,7 @@
     <ClInclude Include="Dispatcher.h" />
     <ClInclude Include="EventLoop.h" />
     <ClInclude Include="HttpRequest.h" />
+    <ClInclude Include="HttpResponse.h" />
     <ClInclude Include="TcpConnection.h" />
     <ClInclude Include="TcpServer.h" />
     <ClInclude Include="ThreadPool.h" />
