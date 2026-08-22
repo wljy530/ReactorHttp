@@ -48,7 +48,7 @@ struct EventLoop* eventLoopInitEx(const char* threadName)
 	// 线程id，name，mutex
 	evLoop->threadID = pthread_self();
 	// 主线程调用该函数传参为NULL，以此来区分调用对象是主线程还是子线程
-	strcpy(evLoop->pthreadName, threadName == NULL ? "MainThread" : threadName);
+	strcpy(evLoop->threadName, threadName == NULL ? "MainThread" : threadName);
 	pthread_mutex_init(&evLoop->mutex, NULL);
 
 	// 本地通信fd

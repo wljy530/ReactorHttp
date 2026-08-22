@@ -1,5 +1,7 @@
 #pragma once
 #include <stdbool.h>
+#include "Buffer.h"
+#include "HttpResponse.h"
 
 // 请求头键值对
 struct RequestHeader
@@ -60,7 +62,7 @@ bool parseHttpRequest(struct HttpRequest* request, struct Buffer* readBuf,
 
 // 解码字符串
 // 因为URL编码规则，非ASCII字符(中文、符号)会转成%加上该字节的两位十六进制，
-// UTF?8中文一个汉字占3字节，所以一个中文会变成%XX%XX%XX。
+// UTF-8中文一个汉字占3字节，所以一个中文会变成%XX%XX%XX。
 int hexToDec(char c);  // 16进制转10进制
 void decodeMsg(char* to, char* from);  // to 存储解码之后的数据，传出参数；from 被解码的数据，传入参数
 

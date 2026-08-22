@@ -1,4 +1,6 @@
 #pragma once
+#include "TcpConnection.h"
+#include "Buffer.h"
 
 // ¶¨Òå×´Ì¬Âë
 enum HttpStatusCode

@@ -1,6 +1,4 @@
 #include "HttpResponse.h"
-#include "TcpConnection.h"
-#include "Buffer.h"
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>
@@ -63,11 +61,11 @@ void httpResponsePrepareMsg(struct HttpResponse* response, struct Buffer* sendBu
 	// 空行
 	bufferAppendString(sendBuf, "\r\n");
 
+#ifndef MSG_SEND_AUTO
+	// 先发送部分数据给客户端
+	bufferSendData(sendBuf, socket);
+#endif
+
 	// 回复的数据
 	response->sendDataFunc(response->fileName, sendBuf, socket);
-
-#ifndef MSG_SEND_AUTO
-	// 发送数据给客户端
-	bufferSendData(sendBuf, socket);  
-#endif
 }

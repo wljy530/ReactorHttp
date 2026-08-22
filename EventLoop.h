@@ -40,7 +40,7 @@ struct EventLoop
 
 	// 线程id，name，mutex
 	pthread_t threadID;
-	char pthreadName[32];
+	char threadName[32];
 	pthread_mutex_t mutex;
 
 	// 存储本地通信的fd，通过socketPair初始化

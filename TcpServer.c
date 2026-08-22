@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "TcpConnection.h"
+#include "Log.h"
 
 struct TcpServer* tcpServerInit(unsigned short port, int threadNum)
 {
@@ -83,6 +84,8 @@ int acceptConnection(void* arg)
 
 void tcpServerRun(struct TcpServer* server)
 {
+	Debug("服务器已经启动了...");
+
 	// 启动线程池
 	threadPoolRun(server->threadPool);
 

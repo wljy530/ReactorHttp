@@ -3,6 +3,7 @@
 #include "HttpResponse.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "Log.h"
 
 int processRead(void* arg)
 {
@@ -10,6 +11,7 @@ int processRead(void* arg)
 
 	// 接收数据
 	int count = bufferSocketRead(conn->readBuf, conn->channel->fd);
+	Debug("接收到的http请求数据: %s", conn->readBuf->data + conn->readBuf->readPos);
 	if (count > 0)
 	{
 #ifdef MSG_SEND_AUTO  // 这种一起发送数据的方式需要多路复用检测写事件后，才能一并发送数据，因此在读事件中不能断开连接
@@ -28,6 +30,13 @@ int processRead(void* arg)
 			bufferAppendString(conn->writeBuf, errMsg);
 		}
 	}
+	else
+	{
+#ifdef MSG_SEND_AUTO
+		// 断开连接
+		eventLoopAddTask(conn->evLoop, conn->channel, DELETE);  // 向任务队列中加入删除任务
+#endif
+	}
 
 #ifndef MSG_SEND_AUTO
 	// 断开连接
@@ -39,6 +48,8 @@ int processRead(void* arg)
 
 int processWrite(void* arg)
 {
+	Debug("开始发送数据了(基于写事件发送)...");
+
 	struct TcpConnection* conn = (struct TcpConnection*)arg;
 
 	// 发送数据
@@ -69,6 +80,9 @@ struct TcpConnection* tcpConnectionInit(int fd, struct EventLoop* evLoop)
 	conn->request = httpRequestInit();
 	conn->response = httpResponseInit();
 
+	Debug("和客户端建立了连接, threadName: %s, threadId: %s, connName: %s",
+		evLoop->threadName, evLoop->threadID, conn->name);
+
 	return conn;
 }
 
@@ -78,7 +92,7 @@ int tcpConnectionDestroy(void* arg)
 	if (conn != NULL)
 	{
 		if (conn->readBuf && bufferReadableSize(conn->readBuf) == 0 && 
-			conn->writeBuf && bufferWriteableSize(conn->writeBuf) == 0)
+			conn->writeBuf && bufferReadableSize(conn->writeBuf) == 0)
 		{
 			// 成员变量中的evLoop不应该释放，因为那是属于子线程的
 			destoryChannel(conn->evLoop, conn->channel);
@@ -89,6 +103,6 @@ int tcpConnectionDestroy(void* arg)
 			free(conn);
 		}
 	}
-
+	Debug("连接断开，释放资源。connName: %s", conn->name);
 	return 0;
 }

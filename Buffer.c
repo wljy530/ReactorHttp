@@ -103,7 +103,7 @@ int bufferSocketRead(struct Buffer* buffer, int fd)
 
 	// 初始化数组元素
 	int writeableSize = bufferWriteableSize(buffer);
-	vec[0].iov_base = buffer->data + buffer->readPos;
+	vec[0].iov_base = buffer->data + buffer->writePos;
 	vec[0].iov_len = writeableSize;
 	char* tmpbuf = (char*)malloc(40960);
 	vec[1].iov_base = tmpbuf;
@@ -145,7 +145,10 @@ int bufferSendData(struct Buffer* buffer, int socket)
 	int readable = bufferReadableSize(buffer);  // 待发送给客户端的数据块
 	if (readable > 0)
 	{
-		int count = send(socket, buffer + buffer->readPos, readable, 0);
+		// send函数的第四个参数需要传入宏值MSG_NOSIGNAL，这是由于如果客户端将未下载好的文件关闭或者未加载好的页面返回，
+		// 相当于关闭了TCP的读端，但是服务器继续向读端写数据，就会触发SIGPIPE(管道破裂)，让服务器终止，这对服务器是致命的
+		// 因此这里传入宏值忽略该信号
+		int count = send(socket, buffer->data + buffer->readPos, readable, MSG_NOSIGNAL);
 		if (count > 0)
 		{
 			buffer->readPos += count;

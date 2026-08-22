@@ -98,6 +98,7 @@
     <ClInclude Include="EventLoop.h" />
     <ClInclude Include="HttpRequest.h" />
     <ClInclude Include="HttpResponse.h" />
+    <ClInclude Include="Log.h" />
     <ClInclude Include="TcpConnection.h" />
     <ClInclude Include="TcpServer.h" />
     <ClInclude Include="ThreadPool.h" />

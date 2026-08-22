@@ -1,13 +1,11 @@
 #define _GNU_SOURCE 
 #include "HttpRequest.h"
-#include "Buffer.h"
 #include <stdlib.h>
 #include <strings.h>
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
 #include <sys/stat.h>
-#include "HttpResponse.h"
 #include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -203,7 +201,8 @@ bool parseHttpRequest(struct HttpRequest* request, struct Buffer* readBuf,
 			flag = parseHttpRequestHeader(request, readBuf);
 			break;
 		case ParseReqBody:  // 对于post请求暂时不做处理
-			break;
+			request->curState = ParseReqDone;  // 假装处理完数据块
+			continue;  // 跳过下方的 processHttpRequest，直接回到 while 条件判断
 		default:
 			break;
 		}
@@ -384,11 +383,21 @@ void sendDir(const char* dirName, struct Buffer* sendBuf, int cfd)
 		bufferAppendString(sendBuf, buf);
 		memset(buf, 0, sizeof(buf));
 
+#ifndef MSG_SEND_AUTO
+		// 先发送部分数据给客户端
+		bufferSendData(sendBuf, cfd);
+#endif
+
 		free(namelist[i]);
 	}
 
 	sprintf(buf, "</table></body></html>");
 	bufferAppendString(sendBuf, buf);
+
+#ifndef MSG_SEND_AUTO
+	// 再发送部分数据给客户端
+	bufferSendData(sendBuf, cfd);
+#endif
 
 	free(namelist);
 }
@@ -407,7 +416,11 @@ void sendFile(const char* fileName, struct Buffer* sendBuf, int cfd)
 		{
 			// bufferAppendString(sendBuf, buf); 这里不用这个函数，因为此函数内部的strlen需要字符串尾部有\0
 			bufferAppendData(sendBuf, buf, len);
-			usleep(10);  // 这非常重要，可以给客户端解析数据留有一定的缓冲时间
+
+#ifndef MSG_SEND_AUTO
+			// 先发送部分数据给客户端
+			bufferSendData(sendBuf, cfd);
+#endif
 		}
 		else if (len == 0)
 		{
@@ -417,6 +430,7 @@ void sendFile(const char* fileName, struct Buffer* sendBuf, int cfd)
 		{
 			perror("read");
 			close(fd);
+			break;
 		}
 	}
 #else
@@ -502,8 +516,8 @@ bool processHttpRequest(struct HttpRequest* request, struct HttpResponse* respon
 		strcpy(response->statusMsg, "OK"); // 状态描述 
 		// 响应头
 		char tmp[12] = { 0 };
-		sprintf(tmp, "ld", st.st_size);  
-		httpRequestAddHeader(request, "Content-length", tmp);  // 文件大小
+		sprintf(tmp, "%ld", st.st_size);  
+		httpResponseAddHeader(response, "Content-length", tmp);  // 文件大小
 		httpResponseAddHeader(response, "Content-type", getFileType(file));
 		response->sendDataFunc = sendFile;
 	}
