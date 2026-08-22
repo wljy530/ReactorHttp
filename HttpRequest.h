@@ -68,9 +68,9 @@ void decodeMsg(char* to, char* from);  // to 存储解码之后的数据，传出参数；from 
 const char* getFileType(const char* name);
 
 // 发送目录给客户端
-int sendDir(const char* dirName, int cfd);
+void sendDir(const char* dirName, struct Buffer* sendBuf, int cfd);
 // 发送文件给客户端
-int sendFile(const char* fileName, int cfd);
+void sendFile(const char* fileName, struct Buffer* sendBuf, int cfd);
 
 // 处理http请求协议(基于get的http请求)
 bool processHttpRequest(struct HttpRequest* request, struct HttpResponse* response);

@@ -12,6 +12,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <dirent.h>
+#include <unistd.h>
+#include <stdio.h>
 
 #define HeaderSize 12  // 初始化时请求头的键值对数量
 struct HttpRequest* httpRequestInit()
@@ -341,7 +343,7 @@ const char* getFileType(const char* name)
 	</body>
 </html>
 */
-int sendDir(const char* dirName, int cfd)
+void sendDir(const char* dirName, struct Buffer* sendBuf, int cfd)
 {
 	// 需要发送的html标签语言
 	char buf[4096] = { 0 };
@@ -379,33 +381,32 @@ int sendDir(const char* dirName, int cfd)
 				, name, name, st.st_size);
 		}
 
-		send(cfd, buf, strlen(buf), 0);
+		bufferAppendString(sendBuf, buf);
 		memset(buf, 0, sizeof(buf));
 
 		free(namelist[i]);
 	}
 
 	sprintf(buf, "</table></body></html>");
-	send(cfd, buf, strlen(buf), 0);
+	bufferAppendString(sendBuf, buf);
 
 	free(namelist);
-
-	return 0;
 }
 
-int sendFile(const char* fileName, int cfd)
+void sendFile(const char* fileName, struct Buffer* sendBuf, int cfd)
 {
 	int fd = open(fileName, O_RDONLY);
 	assert(fd > 0);
 
-#if 0
+#if 1
 	while (1)
 	{
 		char buf[1024];
 		int len = read(fd, buf, sizeof(buf));
 		if (len > 0)
 		{
-			send(cfd, buf, len, 0);
+			// bufferAppendString(sendBuf, buf); 这里不用这个函数，因为此函数内部的strlen需要字符串尾部有\0
+			bufferAppendData(sendBuf, buf, len);
 			usleep(10);  // 这非常重要，可以给客户端解析数据留有一定的缓冲时间
 		}
 		else if (len == 0)
@@ -415,7 +416,7 @@ int sendFile(const char* fileName, int cfd)
 		else
 		{
 			perror("read");
-			return -1;
+			close(fd);
 		}
 	}
 #else
@@ -442,7 +443,6 @@ int sendFile(const char* fileName, int cfd)
 
 #endif
 	close(fd);
-	return 0;
 }
 
 bool processHttpRequest(struct HttpRequest* request, struct HttpResponse* response)
@@ -480,7 +480,7 @@ bool processHttpRequest(struct HttpRequest* request, struct HttpResponse* respon
 		httpResponseAddHeader(response, "Content-type", getFileType(".html"));
 		response->sendDataFunc = sendFile;
 
-		return 0;
+		return false;
 	}
 	
 	// 判断文件类型
@@ -508,5 +508,5 @@ bool processHttpRequest(struct HttpRequest* request, struct HttpResponse* respon
 		response->sendDataFunc = sendFile;
 	}
 
-	return false;
+	return true;
 }

@@ -60,7 +60,7 @@ struct EventLoop* eventLoopInitEx(const char* threadName)
 	}
 	// 指定规则: evLoop->socketPair[0] 发送数据，evLoop->socketPair[1] 接收数据
 	// 因此需要把evLoop->socketPair[1]放进任务队列
-	struct Channel* channel = channelInit(evLoop->socketPair[1], ReadEvent, readLocalMessage, NULL, evLoop);
+	struct Channel* channel = channelInit(evLoop->socketPair[1], ReadEvent, readLocalMessage, NULL, NULL, evLoop);
 	eventLoopAddTask(evLoop, channel, ADD);  // 将channel添加到任务队列
 
 	return evLoop;
@@ -142,7 +142,7 @@ int eventLoopAddTask(struct EventLoop* evLoop, struct Channel* channel, enum Ele
 	*		2). 添加新的fd，添加任务节点的操作是由主线程发起的
 	*   2. 主线程主要负责监听，不能让主线程处理任务队列，需要由当前的子线程去处理
 	*/
-	if (evLoop->threadID == pthrread_self())  // 当前线程为子线程
+	if (evLoop->threadID == pthread_self())  // 当前线程为子线程
 	{
 		// 注意其他注释的分析全是从子线程角度分析，如果是主线程调用该函数就是走这个分支，处理任务队列中连接客户端的任务
 		eventLoopProcessTask(evLoop);  

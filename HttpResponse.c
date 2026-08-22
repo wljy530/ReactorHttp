@@ -1,8 +1,10 @@
 #include "HttpResponse.h"
+#include "TcpConnection.h"
 #include "Buffer.h"
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define ResHeaderSize 16
 struct HttpResponse* httpResponseInit()
@@ -63,4 +65,9 @@ void httpResponsePrepareMsg(struct HttpResponse* response, struct Buffer* sendBu
 
 	// 回复的数据
 	response->sendDataFunc(response->fileName, sendBuf, socket);
+
+#ifndef MSG_SEND_AUTO
+	// 发送数据给客户端
+	bufferSendData(sendBuf, socket);  
+#endif
 }

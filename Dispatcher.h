@@ -2,6 +2,7 @@
 #include "Channel.h"
 #include "EventLoop.h"
 
+struct EventLoop;  // 先声明有这样的结构体，否则两个结构体互相包含会出错误
 struct Dispatcher
 {
 	// 事件初始化 -- 初始化 epoll，poll 或者 select 需要的数据块

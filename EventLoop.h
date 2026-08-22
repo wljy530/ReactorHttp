@@ -24,6 +24,7 @@ struct ChannelElement
 	struct ChannelElement* next;
 };
 
+struct Dispatcher;  // 先声明有这样的结构体，否则两个结构体互相包含会出错误
 struct EventLoop
 {
 	bool isQuit;

@@ -96,6 +96,10 @@ static int pollRemove(struct Channel* channel, struct EventLoop* evLoop)
 			}
 
 			data->maxfd--;
+
+			// 通过 channel 释放对应的 TcpConnection 资源
+			channel->destroyCallback(channel->arg);  // 这里的arg是channelInit指定的conn(struct TcpConnection*)
+
 			return 0;
 		}
 	}

@@ -4,6 +4,9 @@
 #include <string.h>
 #include <sys/uio.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 struct Buffer* bufferInit(int size)
 {
@@ -134,6 +137,24 @@ char* bufferFindCRLF(struct Buffer* buffer)
 	char* ptr = memmem(buffer->data + buffer->readPos, bufferReadableSize(buffer), "\r\n", 2);
 
 	return ptr;
+}
+
+int bufferSendData(struct Buffer* buffer, int socket)
+{
+	// 判断buffer有无数据
+	int readable = bufferReadableSize(buffer);  // 待发送给客户端的数据块
+	if (readable > 0)
+	{
+		int count = send(socket, buffer + buffer->readPos, readable, 0);
+		if (count > 0)
+		{
+			buffer->readPos += count;
+			usleep(1);
+		}
+		return count;
+	}
+
+	return 0;
 }
 
 void bufferDestroy(struct Buffer* buffer)

@@ -2,6 +2,8 @@
 #include <sys/types.h>         
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "TcpConnection.h"
 
 struct TcpServer* tcpServerInit(unsigned short port, int threadNum)
@@ -24,7 +26,7 @@ struct Listener* listenerInit(unsigned short port)
 	if (lfd == -1)
 	{
 		perror("socket");
-		return -1;
+		return NULL;
 	}
 
 	// 2. 设置端口复用
@@ -33,7 +35,7 @@ struct Listener* listenerInit(unsigned short port)
 	if (ret == -1)
 	{
 		perror("setsockopt");
-		return -1;
+		return NULL;
 	}
 
 	// 3. 绑定端口和IP
@@ -46,7 +48,7 @@ struct Listener* listenerInit(unsigned short port)
 	if (ret == -1)
 	{
 		perror("bind");
-		return -1;
+		return NULL;
 	}
 
 	// 4. 设置监听
@@ -54,7 +56,7 @@ struct Listener* listenerInit(unsigned short port)
 	if (ret == -1)
 	{
 		perror("listen");
-		return -1;
+		return NULL;
 	}
 
 	// 5. 初始化listener
@@ -85,7 +87,7 @@ void tcpServerRun(struct TcpServer* server)
 	threadPoolRun(server->threadPool);
 
 	// 添加检测的任务到主线程反应堆实例中的任务队列里
-	struct Channel* channel = channelInit(server->listener->lfd, ReadEvent, acceptConnection, NULL, server);
+	struct Channel* channel = channelInit(server->listener->lfd, ReadEvent, acceptConnection, NULL, NULL, server);
 	eventLoopAddTask(server->mainLoop, channel, ADD);
 
 	// 启动反应堆模型

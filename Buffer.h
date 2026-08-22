@@ -11,6 +11,9 @@ struct Buffer
 // 初始化
 struct Buffer* bufferInit(int size);
 
+// 销毁内存
+void bufferDestroy(struct Buffer* buffer);
+
 // 得到剩余的可读的内存容量
 int bufferReadableSize(struct Buffer* buffer);
 
@@ -31,5 +34,5 @@ int bufferSocketRead(struct Buffer* buffer, int fd);
 // 根据\r\n取出一行(作用于解析协议的时候)，找到其在数据块中的位置，返回该位置
 char* bufferFindCRLF(struct Buffer* buffer);
 
-// 销毁内存
-void bufferDestroy(struct Buffer* buffer);
+// 发送数据
+int bufferSendData(struct Buffer* buffer, int socket);
