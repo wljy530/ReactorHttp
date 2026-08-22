@@ -152,7 +152,7 @@ int bufferSendData(struct Buffer* buffer, int socket)
 		if (count > 0)
 		{
 			buffer->readPos += count;
-			usleep(1);
+			//usleep(1);  // 这非常重要，可以给客户端解析数据留有一定的缓冲时间(但是发送数据变得很慢)
 		}
 		return count;
 	}
