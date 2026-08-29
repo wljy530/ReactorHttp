@@ -25,5 +25,5 @@ int processWrite(void* arg);
 // 初始化
 struct TcpConnection* tcpConnectionInit(int fd, struct EventLoop* evLoop);
 
-// 释放内促
+// 释放内存
 int tcpConnectionDestroy(void* arg);
